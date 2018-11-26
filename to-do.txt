@@ -1,0 +1,66 @@
+----------------------------TO-DO------------------------------------
+
+-Criar Server(in e out separado?)
+
+-Criar Client(in e out separado?)
+
+-Registar user
+
+-autenticar user
+
+-user consultar conta corrente(divida que tem a pagar ou saldo disponivel(divida ja paga)???)
+
+-------------------MENU BIG LOCO BIG MAC--------------------------
+
+
+
+
+-----------------catalogo de slots--------------------
+
+-assumir nº fixo de tipos de slots(minor,medium,large...etc) 
+e nº de slots por tipo fixo tambem(QUANTOS?????)
+
+-preço nominal fixo(consoante o tipo suponho)
+
+
+------------atribuiçao de slots a pedido---------------
+
+-reservar servidor a pedido (slot):
+
+.esta operaçao deve esperar até que seja concedida a reserva
+e depois devolve id de reserva (que será usado para terminar uma reserva)
+
+.em caso de não haver slots do tipo pedido, poderao ser canceladas as slots
+que estao para reserva, de modo a satisfazer o pedido
+
+
+-libertar slot (terminar uma reserva e server passa a considerar slot disponivel)
+
+
+--------------atribuicao de slots a leilao------------------
+
+-reservar a leilao:
+
+.esta operacao deve indicar qual o preço que quer dar(ter preço minimo???), 
+esperar que seja concedida e devolve id de reserva
+
+.caso haja varias operacoes de reserva em leilao para um tipo de servidor que passa a estar
+disponivel ,deve ser considerada aquela que ofereça o valor mais alto
+(basicamente todas as reservas que não são satisfeitas mantém-se até serem a mais alta e terem prioridade
+na reserva, a nao ser que sejam canceladas claro)
+
+
+-um slot ocupado por uma reserva em leilao pode ser cancelado pela cloud, caso aconteça
+o user é notificado com o id da reserva
+
+-libertar slot (terminar uma reserva e server passa a considerar slot disponivel)
+
+
+
+
+
+
+
+
+
+
