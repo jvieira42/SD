@@ -5,21 +5,30 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  *
  */
-public class ClientIn implements Runnable {
+public class ClientIn extends Thread {
 
     private BufferedReader in;
+    private Menu menu;
     private ReentrantLock lock;
     private Condition cond;
 
-    public ClientIn(BufferedReader in, ReentrantLock lock, Condition cond) {
+    public ClientIn(BufferedReader in, Menu menu, ReentrantLock lock, Condition cond) {
         this.in = in;
+        this.menu = menu;
         this.lock = lock;
         this.cond = cond;
     }
 
     public void run() {
-        String input;
+        String serverIn;
         try {
+            while((serverIn = in.readLine()) != null){
+
+
+
+
+
+            }
 
 
 
