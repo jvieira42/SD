@@ -14,7 +14,7 @@ public class Client {
             Socket socket = new Socket("localhost",12345);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             Menu menu = new Menu();
-
+            menu.setOption(1);
             ReentrantLock lock = new ReentrantLock();
             Condition cond = lock.newCondition();
 

@@ -21,16 +21,36 @@ public class ServerIn extends Thread {
     }
 
     public void run() {
-        String systemIn;
+        String systemIn, username, password;
         try {
             while ((systemIn = in.readLine()) != null) {
+                if(systemIn.equals("login")) {
+                    username = in.readLine();
+                    password = in.readLine();
+                    try {
+                        this.user = cloud.logIn(username, password, msg);
+                        msg.setMessage("Logged In");
+                    } catch (Exception e) {
+                        msg.setMessage(e.getMessage());
+                    }
+                }
+                else if (systemIn.equals("signin")) {
+                    username = in.readLine();
+                    password = in.readLine();
+                    try {
+                        this.user = cloud.signIn(username, password, msg);
+                        msg.setMessage("Signed In");
+                    } catch (Exception e) {
+                        msg.setMessage(e.getMessage());
+                    }
+                }
 
 
 
 
             }
-            in.close();
 
+            in.close();
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }

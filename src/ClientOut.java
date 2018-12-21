@@ -19,7 +19,6 @@ public class ClientOut extends Thread {
 
     public ClientOut(Socket socket, Menu menu, ReentrantLock lock, Condition cond) {
         try {
-
             this.socket = socket;
             this.menu = menu;
             this.in = new BufferedReader(new InputStreamReader(System.in));
@@ -36,15 +35,47 @@ public class ClientOut extends Thread {
     public void run() {
         String systemIn;
         try {
-            menu.openMenu();
+            menu.setMenu();
             while((systemIn = in.readLine()) != null){
+                if (menu.getOption()==1) {
+                    if(systemIn.equals("1")) {
+                        writer.println("login");
+                        System.out.print("Username: ");
+                        systemIn = in.readLine();
+                        writer.println(systemIn);
+                        System.out.print("Password: ");
+                        systemIn = in.readLine();
+                        writer.println(systemIn);
+                        this.lock.lock();
+                        cond.await();
+                        this.lock.unlock();
+                        systemIn = "1";
+                    }
+                    else if (systemIn.equals("2")) {
+                        writer.println("signin");
+                        System.out.print("Username: ");
+                        systemIn = in.readLine();
+                        writer.println(systemIn);
+                        System.out.print("Password: ");
+                        systemIn = in.readLine();
+                        writer.println(systemIn);
+                        this.lock.lock();
+                        cond.await();
+                        this.lock.unlock();
+                        systemIn = "2";
+                     }
+                     if(systemIn.equals("1") || systemIn.equals("2") || systemIn.equals("3") || systemIn.equals("m")){
+                         System.out.println("\n\n\n\n\n");
+                         menu.setMenu();
+                     }
+                }
+                else if (menu.getOption()==2) {
 
 
 
 
-
+                }
             }
-
 
         socket.shutdownOutput();
         } catch (Exception e) {
