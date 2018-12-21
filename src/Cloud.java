@@ -29,7 +29,7 @@ public class Cloud {
     }
 
 
-    /**Sign in
+    /**Sign In
      * @return user just created
      * */
     public User signIn(String username, String password, Message msg) throws Exception {
@@ -90,6 +90,65 @@ public class Cloud {
         }
     }
 
+    /** Check user reserved slots
+     * @return string with user's slots
+     * */
+    public String checkSlots(User user) {
+        String list="";
+        Map<String,Slot> slots = user.getUserSlots();
+        for(String s : slots.keySet())
+            list.concat(s+"\n");
+        return list;
+    }
 
+    /** Check user debt
+     * @return user debt
+     * */
+    public double checkDebt(User user) {
+        return user.getDebt();
+    }
+
+    /** Reserve slot by type
+     * @return slot id reserved
+     * */
+    public String reserveSlot(User user, String type, Message msg) throws Exception {
+        String id = "";
+        this.slotsAvLock.lock();
+        try {
+            for(Slot s : slotsAvailable.values()) {
+                if (s.getType().equals(type)) {
+                    id = s.getSlotId();
+                    user.setSlot(s);
+                    slotsOccupied.put(s.getSlotId(),s);
+                    slotsAvailable.remove(s.getSlotId());
+                    break;
+                }
+                else throw new Exception("Slot type not available");
+            }
+        } finally {
+            this.slotsAvLock.unlock();
+        }
+        return id;
+    }
+
+    /** Release slot by id
+     * @return slot id that was released
+     * */
+    public String releaseSlot(User user, String id, Message msg) throws Exception {
+        Slot s;
+        this.slotsOcLock.lock();
+        try {
+            if (slotsOccupied.containsKey(id)) {
+                s = slotsOccupied.get(id);
+                slotsOccupied.remove(id);
+                user.removeSlot(id);
+                slotsAvailable.put(s.getSlotId(),s);
+            }
+            else throw new Exception("Slot not occupied");
+        } finally {
+            this.slotsOcLock.unlock();
+        }
+        return id;
+    }
 
 }

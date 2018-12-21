@@ -21,7 +21,7 @@ public class ServerIn extends Thread {
     }
 
     public void run() {
-        String systemIn, username, password;
+        String systemIn, username, password, slotType, slotId;
         try {
             while ((systemIn = in.readLine()) != null) {
                 if(systemIn.equals("login")) {
@@ -44,10 +44,37 @@ public class ServerIn extends Thread {
                         msg.setMessage(e.getMessage());
                     }
                 }
-
-
-
-
+                else if (systemIn.equals("checkSlots")) {
+                    try {
+                        cloud.checkSlots(user);
+                    } catch (Exception e) {
+                        msg.setMessage(e.getMessage());
+                    }
+                }
+                else if (systemIn.equals("checkDebt")) {
+                    try {
+                        double debt = cloud.checkDebt(user);
+                        msg.setMessage("Debt: " + debt);
+                    } catch (Exception e) {
+                        msg.setMessage(e.getMessage());
+                    }
+                }
+                else if (systemIn.equals("reserveSlot")) {
+                    slotType = in.readLine();
+                    try {
+                        cloud.reserveSlot(user, slotType, msg);
+                    } catch (Exception e) {
+                        msg.setMessage(e.getMessage());
+                    }
+                }
+                else if (systemIn.equals("releaseSlot")) {
+                    slotId = in.readLine();
+                    try {
+                        cloud.releaseSlot(user, slotId, msg);
+                    } catch (Exception e) {
+                        msg.setMessage(e.getMessage());
+                    }
+                }
             }
 
             in.close();

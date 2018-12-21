@@ -8,7 +8,7 @@ public class Menu {
     public void setMenu() {
         switch (option) {
             case 1:
-                System.out.println("------------- Menu -------------\n" +
+                System.out.println("-------------- Menu --------------\n" +
                         "* 1 - LogIn                      *\n" +
                         "* 2 - SignIn                     *\n" +
                         "* 0 - Exit                       *\n" +
@@ -16,11 +16,15 @@ public class Menu {
                 break;
 
             case 2:
-                System.out.println("------------- Menu -------------\n" +
+                System.out.println("-------------- Menu --------------\n" +
                         "* 1 - Check Reserved Slots        *\n" +
-                        "* 2 - Reserve a Slot              *\n" +
+                        "* 2 - Check Current Debt          *\n" +
+                        "* 3 - Reserve a Slot              *\n" +
+                        "* 4 - Release a Slot              *\n" +
                         "* 0 - Exit                        *\n" +
                         "-----------------------------------\n");
+                break;
+
         }
     }
 

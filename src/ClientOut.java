@@ -70,10 +70,37 @@ public class ClientOut extends Thread {
                      }
                 }
                 else if (menu.getOption()==2) {
+                    if (systemIn.equals("1"))
+                        writer.println("checkSlots");
 
+                    else if (systemIn.equals("2"))
+                        writer.println("checkDebt");
 
+                    else if (systemIn.equals("3")) {
+                        writer.println("reserveSlot");
+                        System.out.print("Type(micro,med or large): ");
+                        systemIn = in.readLine();
+                        writer.println(systemIn);
+                        this.lock.lock();
+                        cond.await();
+                        this.lock.unlock();
+                    }
+                    else if (systemIn.equals("4")){
+                        writer.println("releaseSlot");
+                        System.out.print("Id to be released: ");
+                        systemIn = in.readLine();
+                        writer.println(systemIn);
+                        this.lock.lock();
+                        cond.await();
+                        this.lock.unlock();
+                    }
+                    else if (systemIn.equals("0"))
+                        break;
 
-
+                    if (systemIn.equals("2") || systemIn.equals("m")){
+                        System.out.println("\n\n\n\n\n");
+                        menu.setMenu();
+                    }
                 }
             }
 
