@@ -1,12 +1,14 @@
------------------------------Feito/Para Testar---------------------------
+-----------------------------Feito---------------------------
 -signIn
 -Login
--checkUserslots
--checkUserdebt
--reserveSlot (a pedido só)
--releaseSlot (NOT DONE)
+-Exit/logout
 
 **************************************TO-DO***************************************
+-checkUserslots
+-checkUserdebt
+-reserveSlot (a pedido e a ??LEILAO?)
+-releaseSlot
+**********************************************************************************
 
 -Criar o nº fixo de slots, e para cada tipo ---> onde fazer isto?
 -Atribuir preço horario fixo, para cada tipo
@@ -34,7 +36,7 @@ na reserva, a nao ser que sejam canceladas claro)
 -um slot ocupado por uma reserva em leilao pode ser cancelado pela cloud, caso aconteça
 o user é notificado com o id da reserva
 
--libertar slot (terminar uma reserva e server passa a considerar slot disponivel)---MESMO QUE O A PEDIDO??---
+-libertar slot (terminar uma reserva e server passa a considerar slot disponivel)
 
 
 

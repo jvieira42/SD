@@ -30,7 +30,7 @@ public class Menu {
                         "* 2 - Check Current Debt          *\n" +
                         "* 3 - Reserve a Slot              *\n" +
                         "* 4 - Release a Slot              *\n" +
-                        "* 0 - Exit                        *\n" +
+                        "* 0 - Logout                      *\n" +
                         "-----------------------------------\n");
                 break;
         }

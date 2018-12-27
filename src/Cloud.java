@@ -120,11 +120,16 @@ public class Cloud {
      * @return string with user's slots
      * */
     public String checkSlots(User user) throws Exception{
+        this.usersLock.lock();
         String list="";
-        Map<String,Slot> slots = user.getUserSlots();
-        for(String s : slots.keySet())
-            list.concat(s+"\n");
-        if (list == "") throw new Exception("There are no reserved slots");
+        try {
+            Map<String,Slot> slots = user.getUserSlots();
+            for(String s : slots.keySet())
+                list.concat(s+"\n");
+            if (list == "") throw new Exception("There are no reserved slots");
+        } finally {
+            this.usersLock.unlock();
+        }
         return list;
     }
 

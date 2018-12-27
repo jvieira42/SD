@@ -35,13 +35,35 @@ public class ServerIn extends Thread {
                     } catch (Exception e) {
                         msg.setMessage(e.getMessage());
                     }
-                } else if(line.equals("signin")) { //SIGN-IN
+                }
+                else if(line.equals("signin")) { //SIGN-IN
                     String user, pass;
                     user = in.readLine();
                     pass = in.readLine();
                     try {
                         this.user = cloud.signIn(user,pass,msg);
                         msg.setMessage("Signed In");
+                    } catch (Exception e) {
+                        msg.setMessage(e.getMessage());
+                    }
+                }
+                else if(line.equals("exit")) {
+                    msg.setMessage("Exit");
+                }
+                else if(line.equals("logout")) {
+                    msg.setMessage("Logged Out");
+                }
+                else if(line.equals("checkSlots")) {
+                    try {
+                        cloud.checkSlots(this.user);
+                    } catch (Exception e) {
+                        msg.setMessage(e.getMessage());
+                    }
+                }
+                else if(line.equals("checkDebt")) {
+                    try {
+                        double debt = cloud.checkDebt(user);
+                        msg.setMessage("Debt: "+debt);
                     } catch (Exception e) {
                         msg.setMessage(e.getMessage());
                     }

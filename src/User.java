@@ -11,14 +11,14 @@ public class User {
     public User() {
         this.username = null;
         this.password = null;
-        this.debt = 0;
+        this.debt = 0.0;
         this.slotsReserved = new HashMap<>();
     }
 
     public User(String username, String password) {
         this.username = username;
         this.password = password;
-        this.debt = 0;
+        this.debt = 0.0;
         this.slotsReserved = new HashMap<>();
     }
 

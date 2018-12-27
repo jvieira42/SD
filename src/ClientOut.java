@@ -66,15 +66,44 @@ public class ClientOut extends Thread {
                             this.lock.unlock();
                             line = "2";
                         }
+                        else if(line.equals("0")){
+                            out.println("exit");
+                            this.lock.lock();
+                            cond.await();
+                            this.lock.unlock();
+                            line="0";
+                        }
+                        else {
+                            System.out.println("Invalid option");
+                        }
+
                         if (line.equals("1") || line.equals("2") || line.equals("3") || line.equals("m")){
-                            System.out.println("\n\n\n\n\n");
+                            System.out.println("\n\n");
                             menu.show();
                         }
                         break;
 
                     case 2:
-
-
+                        if(line.equals("1")) {
+                            out.println("checkSlots");
+                        }
+                        else if(line.equals("2")) {
+                            out.println("checkDebt");
+                        }
+                        else if(line.equals("0")) {
+                            out.println("logout");
+                            this.lock.lock();
+                            cond.await();
+                            this.lock.unlock();
+                            line="0";
+                        }
+                        else {
+                            System.out.println("Invalid option");
+                        }
+                        if (line.equals("0") || line.equals("1") || line.equals("2") || line.equals("m")){
+                            System.out.println("\n\n");
+                            menu.show();
+                        }
                         break;
                 }
             }

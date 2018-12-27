@@ -31,11 +31,14 @@ public class ClientIn extends Thread {
                     cond.signal();
                     this.lock.unlock();
                 }
-                else if(line.equals("Logged Out") || line.equals("User does not exist") || line.equals("Wrong Password")) {
+                else if(line.equals("Logged Out") || line.equals("Username already exists") || line.equals("User does not exist") || line.equals("Wrong Password")) {
                     menu.setOption(1);
                     this.lock.lock();
                     cond.signal();
                     this.lock.unlock();
+                }
+                else if(line.equals("exit")){
+                    System.exit(1);
                 }
 
 
