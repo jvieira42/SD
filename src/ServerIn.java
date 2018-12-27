@@ -1,83 +1,106 @@
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  *
  */
 public class ServerIn extends Thread {
 
-    private User user;
-    private Message msg;
-    private BufferedReader in;
+    private Socket socket;
     private Cloud cloud;
+    private PrintWriter out;
+    private User user;
+    private BufferedReader in;
+    private ReentrantLock lock;
+    private Condition cond;
+    private Message msg;
 
 
-    public ServerIn(Message msg, BufferedReader in, Cloud cloud) throws IOException {
-        this.user = null;
-        this.msg = msg;
-        this.in = in;
+    public ServerIn(BufferedReader in, Socket socket, Cloud cloud, ReentrantLock lock, Condition cond, PrintWriter out, Message msg) {
+        this.socket = socket;
         this.cloud = cloud;
-
+        this.out = out;
+        this.in = in;
+        this.lock = lock;
+        this.cond = cond;
+        this.msg = msg;
+        this.user = new User();
     }
 
-    public void run() {
-        String systemIn, username, password, slotType, slotId;
+    public void loginUser() {
         try {
-            while ((systemIn = in.readLine()) != null) {
-                if(systemIn.equals("login")) {
-                    username = in.readLine();
-                    password = in.readLine();
-                    try {
-                        this.user = cloud.logIn(username, password, msg);
-                        msg.setMessage("Logged In");
-                    } catch (Exception e) {
-                        msg.setMessage(e.getMessage());
-                    }
+            String username = in.readLine();
+            String password = in.readLine();
+            user.setUsername(username);
+            user.setPassword(password);
+            user.setLogged(cloud.logIn(username,password));
+
+            if(user.getLogged()) {
+                System.out.println("Login successful");
+                out.println("login");
+            }
+            else {
+                System.out.println("Login error");
+                out.println("Error");
+            }
+        }catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void signInUser() {
+        try {
+            boolean res;
+            String username = in.readLine();
+            String password = in.readLine();
+            user.setUsername(username);
+            user.setPassword(password);
+            res = cloud.signIn(username,password);
+            if(res) {
+                System.out.println("User registered with sucess");
+                out.println("signIn");
+            }
+            else {
+                System.out.println("User already registered");
+                out.println("User already registered");
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void logoutUser() {
+        try {
+            cloud.logOut(user.getUsername());
+            System.out.println("Logout sucessful");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    @Override
+    public void run() {
+        try {
+            String line;
+            while((line = in.readLine()) != null) {
+                msg.setMessage(line);
+                if(line.equals("login")) {
+                    loginUser();
+                    out.println("login");
                 }
-                else if (systemIn.equals("signin")) {
-                    username = in.readLine();
-                    password = in.readLine();
-                    try {
-                        this.user = cloud.signIn(username, password, msg);
-                        msg.setMessage("Signed In");
-                    } catch (Exception e) {
-                        msg.setMessage(e.getMessage());
-                    }
+                else if(line.equals("signIn")) {
+                    signInUser();
+                    out.println("signIn");
                 }
-                else if (systemIn.equals("checkSlots")) {
-                    try {
-                        cloud.checkSlots(user);
-                    } catch (Exception e) {
-                        msg.setMessage(e.getMessage());
-                    }
-                }
-                else if (systemIn.equals("checkDebt")) {
-                    try {
-                        double debt = cloud.checkDebt(user);
-                        msg.setMessage("Debt: " + debt);
-                    } catch (Exception e) {
-                        msg.setMessage(e.getMessage());
-                    }
-                }
-                else if (systemIn.equals("reserveSlot")) {
-                    slotType = in.readLine();
-                    try {
-                        cloud.reserveSlot(user, slotType, msg);
-                    } catch (Exception e) {
-                        msg.setMessage(e.getMessage());
-                    }
-                }
-                else if (systemIn.equals("releaseSlot")) {
-                    slotId = in.readLine();
-                    try {
-                        cloud.releaseSlot(user, slotId, msg);
-                    } catch (Exception e) {
-                        msg.setMessage(e.getMessage());
-                    }
+                else if(line.equals("logout")) {
+                    logoutUser();
+                    out.println("logout");
                 }
             }
-
-            in.close();
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
