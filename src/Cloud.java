@@ -45,23 +45,9 @@ public class Cloud {
     /**Sign In
      * @return user just created
      * */
-    public boolean signIn(String username, String password) throws Exception {
-        boolean res = false;
+    public User signIn(String username, String password, Message msg) throws Exception {
+        User u;
         this.usersLock.lock();
-
-        try {
-            if (!this.users.containsKey(username)) {
-                User u = new User(username,password,false);
-                this.users.put(username,u);
-                res = true;
-            }
-            return res;
-
-        } finally {
-            this.usersLock.unlock();
-        }
-
-        /*
         try {
             if (this.users.containsKey(username)) throw new Exception("Username already exists");
             else {
@@ -79,35 +65,19 @@ public class Cloud {
         } finally {
             this.messagesLock.unlock();
         }
-        */
+        return u;
     }
 
     /**Log In
      * @return user who just logged in
      * */
-    public boolean logIn(String username, String password){
-        boolean res = false;
+    public User logIn(String username, String password, Message msg) throws Exception {
         this.usersLock.lock();
-        User u = this.users.get(username);
-        try {
-            if(u != null){
-                if(!u.getLogged() && this.users.containsKey(username)) {
-                    if(u.getPassword().equals(password)) {
-                        u.setLogged(true);
-                        res = true;
-                    }
-                }
-            }
-            return res;
-        } finally {
-            this.usersLock.unlock();
-        }
-        /*
         try {
             if(users.containsKey(username)) {
                 if(!users.get(username).getPassword().equals(password)) throw new Exception("Wrong Password");
             }
-            else throw new Exception("User doesn't exist");
+            else throw new Exception("User does not exist");
         } finally {
             this.usersLock.unlock();
         }
@@ -118,7 +88,7 @@ public class Cloud {
                 Message m = this.messages.get(username);
                 String line;
                 while((line = m.getMessage()) != null){
-                    m.setMessage(line);
+                    msg.setMessage(line);
                 }
                 this.messages.put(username,m);
             }
@@ -131,9 +101,10 @@ public class Cloud {
         } finally {
             this.usersLock.unlock();
         }
-        */
+
     }
 
+    /*
     public void logOut(String username) {
         this.usersLock.lock();
 
@@ -143,6 +114,7 @@ public class Cloud {
             this.usersLock.unlock();
         }
     }
+    */
 
     /** Check user reserved slots
      * @return string with user's slots

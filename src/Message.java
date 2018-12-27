@@ -8,48 +8,40 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class Message {
 
-    private String msg;
+    private List<String> message;
+    private int i;
+    private ReentrantLock lock;
+    private Condition cond;
 
-    public Message() {
-        this.msg = null;
+    public Message(ReentrantLock lock, Condition cond) {
+        this.message = new ArrayList<>();
+        this.i=0;
+        this.lock = lock;
+        this.cond = cond;
     }
 
-    synchronized public String getMessage() throws InterruptedException {
-        while(msg == null)
-            wait();
-
-        String res = msg;
-        msg = null;
-        return res;
-    }
-
-    synchronized public void setMessage(String msg) {
-        this.msg=msg;
-        notifyAll();
-    }
-
-    /*
     public String getMessage() {
         this.lock.lock();
         try {
-            if(i!=listMsg.size())
-                return this.listMsg.get((i++));
+            if(i!=message.size())
+                return this.message.get((i++));
             else return null;
+
         } finally {
             this.lock.unlock();
         }
+
     }
 
     public void setMessage(String msg) {
         this.lock.lock();
         try {
-            this.listMsg.add(msg);
+            this.message.add(msg);
             cond.signal();
         } finally {
             this.lock.unlock();
         }
     }
-
 
     public ReentrantLock getLock() {
         return this.lock;
@@ -58,5 +50,5 @@ public class Message {
     public Condition getCondition() {
         return this.cond;
     }
-    */
+
 }

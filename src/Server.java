@@ -15,9 +15,10 @@ public class Server {
     private static int port = 12345;
 
     public static void main (String args[]) throws IOException {
+        ServerSocket server = new ServerSocket(port);
         Socket socket;
-        Cloud cloud = new Cloud();
         ReentrantLock lock = new ReentrantLock();
+        Cloud cloud = new Cloud();
 
         //Povoamento das slots 10 por cada tipo (micro,med,large)
         for (int i=0; i<10;i++){
@@ -36,22 +37,18 @@ public class Server {
         }
 
         try {
-            ServerSocket svSocket = new ServerSocket(port);
-
-            while ((socket = svSocket.accept()) != null) {
-                Message msg = new Message();
+            while ((socket = server.accept()) != null) {
+                Condition cond = lock.newCondition();
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
-                Condition cond = lock.newCondition();
-                System.out.println("Connected to server\n");
+                Message msg = new Message(lock,cond);
 
-                ServerIn serverIn = new ServerIn(in, socket, cloud, lock, cond, out, msg);
-                ServerOut serverOut = new ServerOut(in, lock, cond, out, msg);
+                ServerIn serverIn = new ServerIn(msg,in,cloud);
+                ServerOut serverOut = new ServerOut(msg,out);
 
                 serverIn.start();
                 serverOut.start();
             }
-            svSocket.close();
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }

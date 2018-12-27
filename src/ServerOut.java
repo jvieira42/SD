@@ -1,5 +1,4 @@
 import java.io.PrintWriter;
-import java.io.BufferedReader;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -8,31 +7,26 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class ServerOut extends Thread {
 
+    private PrintWriter out;
+    private Message msg;
     private ReentrantLock lock;
     private Condition cond;
-    private PrintWriter out;
-    private BufferedReader in;
-    private Message msg;
 
-
-    public ServerOut(BufferedReader in, ReentrantLock lock, Condition cond, PrintWriter out, Message msg)  {
-        this.lock = lock;
-        this.cond = cond;
-        this.out = out;
-        this.in = in;
+    public ServerOut(Message msg, PrintWriter out)  {
         this.msg = msg;
+        this.out = out;
+        this.cond = msg.getCondition();
+        this.lock = msg.getLock();
     }
 
+    @Override
     public void run() {
         this.lock.lock();
         try {
             String line;
             while(true) {
-                line = msg.getMessage();
-                if (line.equals("Error") || line.equals("logout") || line.equals("User already registered") || line.equals("quit")) {
-                    break;
-                }
-            out.println(line);
+                while((line = msg.getMessage()) == null) cond.await();
+                this.out.println(line);
             }
 
         } catch (Exception e) {
