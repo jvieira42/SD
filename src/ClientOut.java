@@ -71,14 +71,14 @@ public class ClientOut extends Thread {
                             this.lock.lock();
                             cond.await();
                             this.lock.unlock();
-                            line="0";
+                            line = "0";
                         }
                         else {
                             System.out.println("Invalid option");
                         }
 
                         if (line.equals("1") || line.equals("2") || line.equals("3") || line.equals("m")){
-                            System.out.println("\n\n");
+                            System.out.println("\n");
                             menu.show();
                         }
                         break;
@@ -90,18 +90,39 @@ public class ClientOut extends Thread {
                         else if(line.equals("2")) {
                             out.println("checkDebt");
                         }
+                        else if(line.equals("3")) {
+                            out.println("reserveSlot");
+                            System.out.println("Choose a type: micro, medium or large:");
+                            line = in.readLine();
+                            out.println(line);
+                            this.lock.lock();
+                            cond.await();
+                            this.lock.unlock();
+                            line = "3";
+                        }
+                        else if(line.equals("5")) {
+                            out.println("releaseSlot");
+                            System.out.println("SlotId to be released:");
+                            line = in.readLine();
+                            out.println(line);
+                            this.lock.lock();
+                            cond.await();
+                            this.lock.unlock();
+                            line = "5";
+
+                        }
                         else if(line.equals("0")) {
                             out.println("logout");
                             this.lock.lock();
                             cond.await();
                             this.lock.unlock();
-                            line="0";
+                            line = "0";
                         }
                         else {
                             System.out.println("Invalid option");
                         }
-                        if (line.equals("0") || line.equals("1") || line.equals("2") || line.equals("m")){
-                            System.out.println("\n\n");
+                        if (line.equals("0") || line.equals("1") || line.equals("2") || line.equals("3") || line.equals("4") || line.equals("5") || line.equals("m")){
+                            System.out.println("\n");
                             menu.show();
                         }
                         break;

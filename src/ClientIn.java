@@ -25,7 +25,7 @@ public class ClientIn extends Thread {
             String line;
             while((line = in.readLine()) != null) {
 
-                if(line.equals("Logged In") || line.equals("Signed In")) {
+                if(line.equals("Logged In") || line.equals("Signed In") || line.equals("Slot Reserved") || line.equals("Slot type not available") || line.equals("There are no reserved slots") || line.equals("Slot Released") || line.equals("Slot is not reserved")) {
                     menu.setOption(2);
                     this.lock.lock();
                     cond.signal();
@@ -37,7 +37,7 @@ public class ClientIn extends Thread {
                     cond.signal();
                     this.lock.unlock();
                 }
-                else if(line.equals("exit")){
+                else if(line.equals("Exit")){
                     System.exit(1);
                 }
 

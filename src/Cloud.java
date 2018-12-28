@@ -31,7 +31,7 @@ public class Cloud {
     /**Create slot
      * @return new slot
      * */
-    public Slot createSlot(String id, String type, Double price) {
+    public Slot createSlot(String id, String type, double price) {
         return new Slot(id,type,price);
     }
 
@@ -104,18 +104,6 @@ public class Cloud {
 
     }
 
-    /*
-    public void logOut(String username) {
-        this.usersLock.lock();
-
-        try {
-            this.users.get(username).setLogged(false);
-        } finally {
-            this.usersLock.unlock();
-        }
-    }
-    */
-
     /** Check user reserved slots
      * @return string with user's slots
      * */
@@ -123,10 +111,9 @@ public class Cloud {
         this.usersLock.lock();
         String list="";
         try {
-            Map<String,Slot> slots = user.getUserSlots();
-            for(String s : slots.keySet())
-                list.concat(s+"\n");
-            if (list == "") throw new Exception("There are no reserved slots");
+            for(String s : this.users.get(user.getUsername()).getUserSlots().keySet())
+                list = list + s +"\n";
+            if (list.equals("")) throw new Exception("There are no reserved slots");
         } finally {
             this.usersLock.unlock();
         }
@@ -143,15 +130,18 @@ public class Cloud {
     /** Reserve slot by type
      * @return slot id reserved
      * */
-    public String reserveSlot(User user, String type, Message msg) throws Exception {
+    public String reserveSlot(User user, String type) throws Exception {
         String id = "";
+        Slot res = null;
         this.slotsAvLock.lock();
         try {
             for(Slot s : slotsAvailable.values()) {
                 if (s.getType().equals(type)) {
+                    res=s;
                     id = s.getSlotId();
-                    user.setSlot(s);
-                    slotsOccupied.put(s.getSlotId(),s);
+                    this.usersLock.lock();
+                    this.users.get(user.getUsername()).setSlot(s);
+                    this.usersLock.unlock();
                     slotsAvailable.remove(s.getSlotId());
                     break;
                 }
@@ -160,19 +150,11 @@ public class Cloud {
         } finally {
             this.slotsAvLock.unlock();
         }
-
-        this.messagesLock.lock();
+        this.slotsOcLock.lock();
         try {
-            if(this.messages.containsKey(user.getUsername())){
-                Message m = this.messages.get(user.getUsername());
-                String line;
-                while((line = m.getMessage()) != null){
-                    m.setMessage(line);
-                }
-                this.messages.put(user.getUsername(),m);
-            }
+            slotsOccupied.put(res.getSlotId(),res);
         } finally {
-            this.messagesLock.unlock();
+            this.slotsOcLock.unlock();
         }
         return id;
     }
@@ -180,17 +162,21 @@ public class Cloud {
     /** Release slot by id
      * @return slot id that was released
      * */
-    public String releaseSlot(User user, String id, Message msg) throws Exception {
+    public String releaseSlot(User user, String id) throws Exception {
         Slot s;
         this.slotsOcLock.lock();
         try {
             if (slotsOccupied.containsKey(id)) {
                 s = slotsOccupied.get(id);
                 slotsOccupied.remove(id);
-                user.removeSlot(id);
+                this.usersLock.lock();
+                this.users.get(user.getUsername()).removeSlot(id);
+                this.usersLock.unlock();
+                this.slotsAvLock.lock();
                 slotsAvailable.put(s.getSlotId(),s);
+                this.slotsAvLock.unlock();
             }
-            else throw new Exception("Slot not occupied");
+            else throw new Exception("Slot is not reserved");
         } finally {
             this.slotsOcLock.unlock();
         }

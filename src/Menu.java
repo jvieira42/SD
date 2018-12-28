@@ -29,7 +29,8 @@ public class Menu {
                         "* 1 - Check Reserved Slots        *\n" +
                         "* 2 - Check Current Debt          *\n" +
                         "* 3 - Reserve a Slot              *\n" +
-                        "* 4 - Release a Slot              *\n" +
+                        "* 4 - Reserve a Slot by auction   *\n" +
+                        "* 5 - Release a Slot              *\n" +
                         "* 0 - Logout                      *\n" +
                         "-----------------------------------\n");
                 break;

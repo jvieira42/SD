@@ -20,20 +20,14 @@ public class Server {
         ReentrantLock lock = new ReentrantLock();
         Cloud cloud = new Cloud();
 
-        //Povoamento das slots 10 por cada tipo (micro,med,large)
-        for (int i=0; i<10;i++){
-            Slot s = new Slot("s"+i+".micro","micro",0.5);
-            cloud.setSlot(s);
-        }
-
-        for (int i=0; i<10;i++){
-            Slot s = new Slot("s"+i+".med","med",1.0);
-            cloud.setSlot(s);
-        }
-
-        for (int i=0; i<10;i++){
-            Slot s = new Slot("s"+i+".large","large",1.5);
-            cloud.setSlot(s);
+        //Povoamento das slots 100 por cada tipo (micro,med,large)
+        for (int i=0; i<100;i++){
+            Slot sMicro = new Slot("s"+i+".micro","micro",0.5);
+            Slot sMed = new Slot("s"+i+".medium","medium",1.0);
+            Slot sLarge = new Slot("s"+i+".large","large",1.5);
+            cloud.setSlot(sMicro);
+            cloud.setSlot(sMed);
+            cloud.setSlot(sLarge);
         }
 
         try {

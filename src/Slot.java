@@ -5,10 +5,10 @@ public class Slot {
 
     private String id;
     private String type;
-    private Double price;
+    private double price;
 
 
-    public Slot(String id, String type, Double price) {
+    public Slot(String id, String type, double price) {
         this.id = id;
         this.type = type;
         this.price = price;
@@ -23,7 +23,7 @@ public class Slot {
         return this.type;
     }
 
-    public Double getPrice() {
+    public double getPrice() {
         return this.price;
     }
 

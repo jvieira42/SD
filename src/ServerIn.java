@@ -55,7 +55,8 @@ public class ServerIn extends Thread {
                 }
                 else if(line.equals("checkSlots")) {
                     try {
-                        cloud.checkSlots(this.user);
+                        String list = cloud.checkSlots(this.user);
+                        msg.setMessage("Current Slots:\n" + list);
                     } catch (Exception e) {
                         msg.setMessage(e.getMessage());
                     }
@@ -64,6 +65,25 @@ public class ServerIn extends Thread {
                     try {
                         double debt = cloud.checkDebt(user);
                         msg.setMessage("Debt: "+debt);
+                    } catch (Exception e) {
+                        msg.setMessage(e.getMessage());
+                    }
+                }
+                else if(line.equals("reserveSlot")) {
+                    String type = in.readLine();
+                    try {
+                        String id = cloud.reserveSlot(user,type);
+                        msg.setMessage(id);
+                        msg.setMessage("Slot Reserved");
+                    } catch (Exception e) {
+                        msg.setMessage(e.getMessage());
+                    }
+                }
+                else if(line.equals("releaseSlot")) {
+                    String id = in.readLine();
+                    try {
+                        cloud.releaseSlot(user,id);
+                        msg.setMessage("Slot Released");
                     } catch (Exception e) {
                         msg.setMessage(e.getMessage());
                     }
