@@ -8,8 +8,6 @@
 **************************************TO-DO***************************************
 -reserveSlot a LEILAO
 
--releaseSlot -> metodo feito e a funcionar, falta implementar (tempo usado no slot * preço) e adicionar ao debt do user
-
 -payDebt -> metodo para user pagar divida
 **********************************************************************************
 

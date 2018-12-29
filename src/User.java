@@ -48,6 +48,10 @@ public class User {
 
     public void setPassword (String password) { this.password = password; }
 
+    public void addDebt (double debt){
+        this.debt += debt;
+    }
+
     public void removeSlot (String id) {
         slotsReserved.remove(id);
     }

@@ -137,13 +137,20 @@ public class Cloud {
         try {
             for(Slot s : slotsAvailable.values()) {
                 if (s.getType().equals(type)) {
-                    res=s;
-                    id = s.getSlotId();
-                    this.usersLock.lock();
-                    this.users.get(user.getUsername()).setSlot(s);
-                    this.usersLock.unlock();
-                    slotsAvailable.remove(s.getSlotId());
-                    break;
+                    Lock slotLock = s.getLock();
+                    slotLock.lock();
+                    try{
+                        res=s;
+                        id = s.getSlotId();
+                        s.startTime();
+                        this.usersLock.lock();
+                        this.users.get(user.getUsername()).setSlot(s);
+                        this.usersLock.unlock();
+                        slotsAvailable.remove(s.getSlotId());
+                        break;
+                    }finally {
+                        slotLock.unlock();
+                    }
                 }
             }
             if (res == null) throw new Exception("Slot type not available");
@@ -164,17 +171,27 @@ public class Cloud {
      * */
     public String releaseSlot(User user, String id) throws Exception {
         Slot s;
+        double slotTime = 0;
         this.slotsOcLock.lock();
         try {
             if (slotsOccupied.containsKey(id)) {
                 s = slotsOccupied.get(id);
-                slotsOccupied.remove(id);
-                this.usersLock.lock();
-                this.users.get(user.getUsername()).removeSlot(id);
-                this.usersLock.unlock();
-                this.slotsAvLock.lock();
-                slotsAvailable.put(s.getSlotId(),s);
-                this.slotsAvLock.unlock();
+                Lock slotLock = s.getLock();
+                slotLock.lock();
+                try{
+                    slotTime = s.getFinalTime()/1000;
+                    slotsOccupied.remove(id);
+                    this.usersLock.lock();
+                    this.users.get(user.getUsername()).removeSlot(id);
+                    this.users.get(user.getUsername()).addDebt( slotTime * s.getPrice());
+                    this.usersLock.unlock();
+                    this.slotsAvLock.lock();
+                    slotsAvailable.put(s.getSlotId(),s);
+                    this.slotsAvLock.unlock();
+                    s.resetTime();
+                }finally {
+                    slotLock.unlock();
+                }
             }
             else throw new Exception("Slot is not reserved");
         } finally {
