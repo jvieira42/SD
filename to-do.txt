@@ -8,9 +8,9 @@
 **************************************TO-DO***************************************
 -reserveSlot a LEILAO
 
--releaseSlot -> metodo feito e a funcionar, falta implementar tempo usado no slot * preço e adicionar ao debt do user
+-releaseSlot -> metodo feito e a funcionar, falta implementar (tempo usado no slot * preço) e adicionar ao debt do user
 
--payDebt
+-payDebt -> metodo para user pagar divida
 
 -bug  no reserveSlot em que tem sempre apenas um tipo de slot disponivel...
 **********************************************************************************
