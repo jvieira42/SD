@@ -145,8 +145,8 @@ public class Cloud {
                     slotsAvailable.remove(s.getSlotId());
                     break;
                 }
-                else throw new Exception("Slot type not available");
             }
+            if (res == null) throw new Exception("Slot type not available");
         } finally {
             this.slotsAvLock.unlock();
         }
