@@ -1,2 +1,4 @@
 #Java
 *.class
+#Idea
+.idea/**
