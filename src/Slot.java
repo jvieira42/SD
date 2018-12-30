@@ -34,6 +34,10 @@ public class Slot {
         return this.price;
     }
 
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
     public Lock getLock(){
         return this.lock;
     }

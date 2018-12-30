@@ -1,7 +1,11 @@
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import static java.lang.Thread.sleep;
 
 /**
  *
@@ -12,19 +16,23 @@ public class Cloud {
     private Map<String,Slot> slotsAvailable;
     private Map<String,Slot> slotsOccupied;
     private Map<String,Message> messages;
+    private Map<String,Auction> auctions;
     private Lock usersLock;
     private Lock slotsAvLock;
     private Lock slotsOcLock;
+    private Lock auctionsLock;
     private Lock messagesLock;
 
     public Cloud(){
         this.users = new HashMap<>();
         this.slotsAvailable = new HashMap<>();
         this.slotsOccupied = new HashMap<>();
+        this.auctions = new HashMap<>();
         this.messages = new HashMap<>();
         this.usersLock = new ReentrantLock();
         this.slotsAvLock = new ReentrantLock();
         this.slotsOcLock = new ReentrantLock();
+        this.auctionsLock = new ReentrantLock();
         this.messagesLock = new ReentrantLock();
     }
 
@@ -200,4 +208,91 @@ public class Cloud {
         return id;
     }
 
+    public void manageAuction(String type, double initPrice, double maxPrice) throws Exception {
+        Auction auction = null;
+            while(true){
+                this.auctionsLock.lock();
+                try{
+                    if (auctions.values().stream().filter(a -> a.getType().equals(type)).count() == 0){
+                        this.slotsAvLock.lock();
+                        try{
+                            for(Slot s : slotsAvailable.values()){
+                                if(s.getType().equals(type)){
+                                    Lock slotLock = s.getLock();
+                                    slotLock.lock();
+                                    try{
+                                        this.slotsAvailable.remove(s.getSlotId());
+                                        auction = new Auction();
+                                        auction.setSlot(s.getSlotId());
+                                        auction.setInitialPrice(0);
+                                        auction.setType(type);
+                                        this.auctions.put(s.getSlotId(),auction);
+                                        this.slotsOcLock.lock();
+                                        this.slotsOccupied.put(s.getSlotId(),s);
+                                        this.slotsOcLock.unlock();
+
+                                    }finally {
+                                        slotLock.unlock();
+                                    }
+                                    break;
+                                }
+                            }
+
+                            if(auction == null) throw new Exception("No Slot available for Auction");
+
+                        }finally {
+                            this.slotsAvLock.unlock();
+                        }
+                    }
+                }finally {
+                    this.auctionsLock.unlock();
+                }
+                try {
+                    sleep(30000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if(auctions.containsKey(auction.getSlot())){
+                    endAuction(auction.getSlot());
+                }
+            }
+    }
+
+    private void endAuction(String auctionID){
+        Auction auction = null;
+        Slot slot = null;
+        User user = null;
+        this.auctionsLock.lock();
+
+        try{
+            auction = auctions.get(auctionID);
+            if(auction.getMaxUser() != null){
+                this.slotsOcLock.lock();
+                slot = slotsOccupied.get(auction.getSlot());
+                this.slotsOcLock.unlock();
+                Lock slotLock = slot.getLock();
+                slotLock.lock();
+                try{
+                    slot.startTime();
+                    slot.setPrice(auction.getMaxPrice());
+                    this.usersLock.lock();
+                    user = this.users.get(auction.getMaxUser());
+                    user.setSlot(slot);
+                    this.usersLock.unlock();
+                }finally {
+                    slotLock.unlock();
+                }
+            }else{
+                //Caso não haver bids
+                this.slotsOcLock.lock();
+                slot = slotsOccupied.get(auction.getSlot());
+                this.slotsOccupied.remove(slot.getSlotId());
+                this.slotsAvLock.lock();
+                this.slotsAvailable.put(slot.getSlotId(),slot);
+                this.slotsAvLock.unlock();
+            }
+        }finally {
+            this.auctionsLock.unlock();
+        }
+    }
 }

@@ -14,7 +14,7 @@ public class Server {
 
     private static int port = 12345;
 
-    public static void main (String args[]) throws IOException {
+    public static void main (String args[]) throws IOException, Exception {
         ServerSocket server = new ServerSocket(port);
         Socket socket;
         ReentrantLock lock = new ReentrantLock();
@@ -28,6 +28,11 @@ public class Server {
             cloud.setSlot(sMicro);
             cloud.setSlot(sMed);
             cloud.setSlot(sLarge);
+            cloud.manageAuction("micro",0.01,0);
+            cloud.manageAuction("medium",0.5, 0);
+            cloud.manageAuction("large",1.0,0);
+
+
         }
 
         try {
