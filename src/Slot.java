@@ -10,7 +10,6 @@ public class Slot {
     private String type;
     private double price;
     private double time;
-    private Lock lock;
 
 
     public Slot(String id, String type, double price) {
@@ -18,7 +17,6 @@ public class Slot {
         this.type = type;
         this.price = price;
         this.time = 0;
-        this.lock = new ReentrantLock();
     }
 
     //Getters
@@ -36,10 +34,6 @@ public class Slot {
 
     public void setPrice(double price) {
         this.price = price;
-    }
-
-    public Lock getLock(){
-        return this.lock;
     }
 
     public void startTime(){

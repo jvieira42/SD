@@ -3,7 +3,7 @@
  */
 public class Auction{
 
-    private String slot;
+    private Slot slot;
     private String type;
     private double initialPrice;
     private double maxPrice;
@@ -17,7 +17,7 @@ public class Auction{
         this.maxUser = null;
     }
 
-    public Auction (String slot, String type, double initialPrice, double maxPrice, String maxUser) {
+    public Auction (Slot slot, String type, double initialPrice, double maxPrice, String maxUser) {
         this.slot = slot;
         this.type = type;
         this.initialPrice = initialPrice;
@@ -25,11 +25,11 @@ public class Auction{
         this.maxUser = maxUser;
     }
 
-    public String getSlot() {
+    public Slot getSlot() {
         return slot;
     }
 
-    public void setSlot(String slot) {
+    public void setSlot(Slot slot) {
         this.slot = slot;
     }
 

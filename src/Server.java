@@ -19,6 +19,7 @@ public class Server {
         Socket socket;
         ReentrantLock lock = new ReentrantLock();
         Cloud cloud = new Cloud();
+        AuctionHouse micro = new AuctionHouse(cloud,"micro");
 
         //Povoamento das slots 100 por cada tipo (micro,med,large)
         for (int i=0; i<100;i++){
@@ -28,14 +29,12 @@ public class Server {
             cloud.setSlot(sMicro);
             cloud.setSlot(sMed);
             cloud.setSlot(sLarge);
-            cloud.manageAuction("micro",0.01,0);
-            cloud.manageAuction("medium",0.5, 0);
-            cloud.manageAuction("large",1.0,0);
-
-
         }
 
         try {
+
+            micro.start();
+
             while ((socket = server.accept()) != null) {
                 Condition cond = lock.newCondition();
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -45,8 +44,10 @@ public class Server {
                 ServerIn serverIn = new ServerIn(msg,in,cloud);
                 ServerOut serverOut = new ServerOut(msg,out);
 
+
                 serverIn.start();
                 serverOut.start();
+
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
