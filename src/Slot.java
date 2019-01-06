@@ -13,7 +13,7 @@ public class Slot {
     private String type;
     private double price;
     private double time;
-
+    private String user;
 
     public Slot(String id, String type, double price) {
         this.id = id;
@@ -22,6 +22,8 @@ public class Slot {
         this.type = type;
         this.price = price;
         this.time = 0;
+        this.user = null;
+
     }
 
     public Slot(String id ,String type){
@@ -41,6 +43,7 @@ public class Slot {
                 break;
         }
         this.time = 0;
+        this.user = null;
     }
 
     //Getters
@@ -90,5 +93,13 @@ public class Slot {
 
     public void setFromAuction(boolean fromAuction) {
         this.fromAuction = fromAuction;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
     }
 }

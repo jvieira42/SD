@@ -1,5 +1,6 @@
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -20,6 +21,8 @@ public class Cloud {
     private Lock slotsOcLock;
     private Lock auctionsLock;
     private Lock messagesLock;
+    private Lock threadsLock;
+    private Condition empty;
 
     public Cloud(){
         this.users = new HashMap<>();
@@ -31,10 +34,14 @@ public class Cloud {
         this.auctions.put("large",new Auction("large"));
         this.messages = new HashMap<>();
         this.usersLock = new ReentrantLock();
+
+        this.threadsLock = new ReentrantLock();
+
         this.slotsAvLock = new ReentrantLock();
         this.slotsOcLock = new ReentrantLock();
         this.auctionsLock = new ReentrantLock();
         this.messagesLock = new ReentrantLock();
+        this.empty = threadsLock.newCondition();
     }
 
     /**Put slot on Map
@@ -133,18 +140,19 @@ public class Cloud {
      * @return slot id reserved
      * */
     public String reserveSlot(User user, String type) throws Exception {
-        String id = "";
+        String id = null;
         Slot res;
         this.slotsAvLock.lock();
         this.usersLock.lock();
         this.slotsOcLock.lock();
+        this.auctionsLock.lock();
         try{
             if(existSlot(type)){
                 for(Slot s : slotsAvailable.values()) {
                     if (s.getType().equals(type)) {
-                        res=s;
-                        slotsAvailable.remove(res.getSlotId());
-                        id = res.getSlotId();
+                        id = s.getSlotId();
+                        res = new Slot(id,s.getType());
+                        slotsAvailable.remove(s.getSlotId());
                         res.startTime();
                         this.users.get(user.getUsername()).setSlot(id);
                         slotsOccupied.put(id,res);
@@ -154,12 +162,31 @@ public class Cloud {
 
             }
             else{
-                throw new Exception("Slot type not available");
+                if(existAuction(type)){
+                    res = this.slotsOccupied.get(getAuction(type));
+                    id = res.getSlotId();
+                    res.setAuction(false);
+                    user.setSlot(res.getSlotId());
+                    this.auctions.get(type).setState(false);
+                }
+                else if(existReservedAuction(type)){
+                    res = this.slotsOccupied.get(getReservedAuction(type));
+                    User bidUser = this.users.get(res.getUser());
+                    bidUser.removeSlot(res.getSlotId());
+                    id = res.getSlotId();
+                    res.setUser("");
+                    res.setFromAuction(false);
+                    user.setSlot(res.getSlotId());
+
+                } else throw new Exception("Slot type not available");
             }
-        }finally {
+        }
+
+        finally {
             this.usersLock.unlock();
             this.slotsAvLock.unlock();
             this.slotsOcLock.unlock();
+            this.auctionsLock.unlock();
         }
         return id;
     }
@@ -188,7 +215,7 @@ public class Cloud {
                 Slot slot = new Slot(id,s.getType());
                 slotsOccupied.remove(id);
                 slotsAvailable.put(id,slot);
-                //notifyAll();
+
             }
             else{
                 throw new Exception("Slot is not reserved");
@@ -240,20 +267,19 @@ public class Cloud {
         this.slotsAvLock.lock();
         try{
                 if (!existAuction(type)){
-                        for(Slot s : slotsAvailable.values()){
-                                if(s.getType().equals(type)){
-                                    created = true;
-                                    Slot slot = new Slot(s.getSlotId(),s.getType(),s.getPrice());
-                                    id = s.getSlotId();
-                                    this.slotsAvailable.remove(s.getSlotId());
-                                    auction = this.auctions.get(type);
-                                    auction.setState(true);
-                                    slot.setAuction(true);
-                                    this.slotsOccupied.put(id,slot);
-                                    break;
-                                }
+                        for(Slot s : slotsAvailable.values()) {
+                            if (s.getType().equals(type)) {
+                                created = true;
+                                Slot slot = new Slot(s.getSlotId(), s.getType(), s.getPrice());
+                                id = s.getSlotId();
+                                this.slotsAvailable.remove(s.getSlotId());
+                                auction = this.auctions.get(type);
+                                auction.setState(true);
+                                slot.setAuction(true);
+                                this.slotsOccupied.put(id, slot);
+                                break;
+                            }
                         }
-                        //if (!created) wait();
                 }
             }catch (Exception e) {
                 e.printStackTrace();
@@ -289,6 +315,7 @@ public class Cloud {
                     slot.setFromAuction(true);
                     slot.startTime();
                     slot.setPrice(auction.getMaxPrice());
+                    slot.setUser(auction.getMaxUser());
                     user = this.users.get(auction.getMaxUser());
                     user.setSlot(slot.getSlotId());
                 }else{
@@ -336,6 +363,24 @@ public class Cloud {
     public String getAuction(String type){
         for(Slot s : this.slotsOccupied.values()){
             if (s.getType().equals(type) && s.isAuction()){
+                return s.getSlotId();
+            }
+        }
+        return null;
+    }
+
+    public boolean existReservedAuction(String type){
+        for(Slot s : this.slotsOccupied.values()){
+            if(s.getType().equals(type) && s.isFromAuction()){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String getReservedAuction(String type){
+        for(Slot s : this.slotsOccupied.values()){
+            if (s.getType().equals(type) && s.isFromAuction()){
                 return s.getSlotId();
             }
         }

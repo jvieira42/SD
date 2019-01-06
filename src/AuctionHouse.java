@@ -4,7 +4,6 @@ public class AuctionHouse extends Thread {
 
     private Cloud cloud;
     private String type;
-    private ReentrantLock lock;
 
     public AuctionHouse(Cloud cloud, String type) {
         this.cloud = cloud;
@@ -20,7 +19,11 @@ public class AuctionHouse extends Thread {
                     if(active) {
                         sleep(30000);
                         cloud.endAuction(type);
+                    } else {
+
+                        sleep(1000);
                     }
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
