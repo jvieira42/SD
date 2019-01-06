@@ -92,13 +92,26 @@ public class ClientOut extends Thread {
                         }
                         else if(line.equals("3")) {
                             out.println("reserveSlot");
-                            System.out.println("Choose a type: micro, medium or large:");
+                            System.out.println("Choose a type: 1-micro, 2-medium, 3-large");
                             line = in.readLine();
                             out.println(line);
                             this.lock.lock();
                             cond.await();
                             this.lock.unlock();
                             line = "3";
+                        }
+                        else if (line.equals("4")) {
+                            out.println("makeBid");
+                            System.out.println("Choose a type: 1-micro, 2-medium, 3-large");
+                            line = in.readLine();
+                            out.println(line);
+                            System.out.println("Make a bid: micro(>0.01), medium(>0.5), large(>1.0)");
+                            line = in.readLine();
+                            out.println(line);
+                            this.lock.lock();
+                            cond.await();
+                            this.lock.unlock();
+                            line = "4";
                         }
                         else if(line.equals("5")) {
                             out.println("releaseSlot");

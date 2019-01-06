@@ -25,7 +25,7 @@ public class ClientIn extends Thread {
             String line;
             while((line = in.readLine()) != null) {
 
-                if(line.equals("Logged In") || line.equals("Signed In") || line.equals("Slot Reserved") || line.equals("Slot type not available") || line.equals("There are no reserved slots") || line.equals("Slot Released") || line.equals("Slot is not reserved")) {
+                if(line.equals("Invalid Option") || line.equals("Logged In") || line.equals("Signed In") || line.equals("Slot Reserved") || line.equals("Slot type not available") || line.equals("There are no reserved slots") || line.equals("Slot Released") || line.equals("Slot is not reserved") || line.equals("Bid Placed") || line.equals("Your bid is too low") || line.equals("No auctions available")) {
                     menu.setOption(2);
                     this.lock.lock();
                     cond.signal();

@@ -1,11 +1,9 @@
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static java.lang.Thread.sleep;
+
 
 /**
  *
@@ -34,13 +32,6 @@ public class Cloud {
         this.slotsOcLock = new ReentrantLock();
         this.auctionsLock = new ReentrantLock();
         this.messagesLock = new ReentrantLock();
-    }
-
-    /**Create slot
-     * @return new slot
-     * */
-    public Slot createSlot(String id, String type, double price) {
-        return new Slot(id,type,price);
     }
 
     /**Put slot on Map
@@ -120,7 +111,7 @@ public class Cloud {
         String list="";
         try {
             for(String s : this.users.get(user.getUsername()).getUserSlots().keySet())
-                list = list + s +"\n";
+                list += s +" ";
             if (list.equals("")) throw new Exception("There are no reserved slots");
         } finally {
             this.usersLock.unlock();
@@ -140,13 +131,13 @@ public class Cloud {
      * */
     public String reserveSlot(User user, String type) throws Exception {
         String id = "";
-        Slot res = null;
-        try {
-            this.slotsAvLock.lock();
+        Slot res;
+        this.slotsAvLock.lock();
+        if(existSlot(type)){
             for(Slot s : slotsAvailable.values()) {
                 if (s.getType().equals(type)) {
                     res=s;
-                    slotsAvailable.remove(s.getSlotId());
+                    slotsAvailable.remove(res.getSlotId());
                     this.slotsAvLock.unlock();
 
                     id = res.getSlotId();
@@ -160,13 +151,9 @@ public class Cloud {
                     break;
                 }
             }
-            if (res == null) throw new Exception("Slot type not available");
 
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+        else throw new Exception("Slot type not available");
         return id;
     }
 
@@ -176,11 +163,10 @@ public class Cloud {
     public String releaseSlot(User user, String id) throws Exception {
         Slot s;
         double slotTime = 0;
-        try {
             this.slotsOcLock.lock();
             if (slotsOccupied.containsKey(id)) {
-                    s = slotsOccupied.get(id);
-                    slotsOccupied.remove(id);
+                s = slotsOccupied.get(id);
+                slotsOccupied.remove(id);
                 this.slotsOcLock.unlock();
                 slotTime = s.getFinalTime()/1000;
 
@@ -198,14 +184,52 @@ public class Cloud {
 
             else throw new Exception("Slot is not reserved");
 
-        } catch (Exception e) {
-                e.printStackTrace();
-        }
         return id;
     }
 
+    /** Make a bid on an auction by type
+     * @return slot id that was bidded
+     * */
+    public String makeBid (String user, String type, double bid) throws Exception {
+        Auction res = null;
+        String id = null;
+        this.auctionsLock.lock();
+        if (existAuction(type)) {
+            for(Auction a : this.auctions.values()) {
+                if (a.getType().equals(type)) {
+                    if (bid>a.getInitialPrice() && bid>a.getMaxPrice()) {
+                        res=a;
+                        a.setMaxPrice(bid);
+                        a.setMaxUser(user);
+                    }
+                    else throw  new Exception("Your bid is too low");
+                }
+
+            }
+        }
+        else throw new Exception("No auctions available");
+        this.auctionsLock.unlock();
+        id = res.getSlot().getSlotId();
+        return id;
+    }
+
+    /** Create an auction
+     * @return slot id of the auction
+     * */
     public String manageAuction(String type){
         Auction auction = null;
+        double initPrice = 0;
+        switch (type) {
+            case "micro":
+                initPrice = 0.01;
+                break;
+            case "medium":
+                initPrice = 0.5;
+                break;
+            case "large":
+                initPrice = 1.0;
+                break;
+        }
             try{
                 this.auctionsLock.lock();
                     if (!existAuction(type)){
@@ -216,14 +240,14 @@ public class Cloud {
                                     this.slotsAvLock.unlock();
                                     auction = new Auction();
                                     auction.setSlot(s);
-                                    auction.setInitialPrice(0);
+                                    auction.setInitialPrice(initPrice);
+                                    auction.setMaxPrice(initPrice);
                                     auction.setType(type);
                                     this.auctions.put(s.getSlotId(),auction);
                                     break;
                                 }
                         }
 
-                        if(auction == null) throw new Exception("No Slot available for Auction");
 
                     }
                 this.auctionsLock.unlock();
@@ -232,35 +256,37 @@ public class Cloud {
             }catch (Exception e) {
                 e.printStackTrace();
             }
+        if(auction == null) return null;
         return auction.getSlot().getSlotId();
     }
 
 
-
+    /** End an auction
+     *
+     * */
     public void endAuction(String auctionID){
         Auction auction = null;
         Slot slot = null;
         User user = null;
-
-
-
         try{
             this.auctionsLock.lock();
             auction = auctions.get(auctionID);
             auctions.remove(auctionID);
 
-
-
             if(auction.getMaxUser() != null){
                 slot = auction.getSlot();
                 slot.startTime();
                 slot.setPrice(auction.getMaxPrice());
+                this.slotsOcLock.lock();
+                slotsOccupied.put(slot.getSlotId(),slot);
+                this.slotsOcLock.unlock();
+
                 this.usersLock.lock();
                 user = this.users.get(auction.getMaxUser());
                 user.setSlot(slot);
                 this.usersLock.unlock();
             }else{
-                //Caso não haver bids
+                //If there are no bids
                 this.slotsAvLock.lock();
                 this.slotsAvailable.put(auction.getSlot().getSlotId(),auction.getSlot());
                 this.slotsAvLock.unlock();
@@ -273,10 +299,24 @@ public class Cloud {
         }
     }
 
-
+    /** Method that checks if there are auctions of type
+     * @return boolean
+     * */
     public boolean existAuction(String type){
         for(Auction a : this.auctions.values()){
             if(a.getType().equals(type)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Method that checks if there are slots available of type
+     * @return slot id that was released
+     * */
+    public boolean existSlot(String type){
+        for(Slot s : this.slotsAvailable.values()){
+            if(s.getType().equals(type)){
                 return true;
             }
         }

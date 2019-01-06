@@ -71,10 +71,29 @@ public class ServerIn extends Thread {
                 }
                 else if(line.equals("reserveSlot")) {
                     String type = in.readLine();
+                    int dig = Integer.parseInt(type);
+                    switch (dig) {
+                        case 1:
+                            type = "micro";
+                            break;
+                        case 2:
+                            type = "medium";
+                            break;
+                        case 3:
+                            type = "large";
+                            break;
+                        default:
+                            type = null;
+                            break;
+                    }
+
                     try {
-                        String id = cloud.reserveSlot(user,type);
-                        msg.setMessage(id);
-                        msg.setMessage("Slot Reserved");
+                        if(type == null) msg.setMessage("Invalid Option");
+                        else {
+                            String id = cloud.reserveSlot(user,type);
+                            msg.setMessage(id);
+                            msg.setMessage("Slot Reserved");
+                        }
                     } catch (Exception e) {
                         msg.setMessage(e.getMessage());
                     }
@@ -84,6 +103,36 @@ public class ServerIn extends Thread {
                     try {
                         cloud.releaseSlot(user,id);
                         msg.setMessage("Slot Released");
+                    } catch (Exception e) {
+                        msg.setMessage(e.getMessage());
+                    }
+                }
+                else if (line.equals("makeBid")) {
+                    String type = in.readLine();
+                    String bid = in.readLine();
+                    double value = Double.parseDouble(bid);
+                    int dig = Integer.parseInt(type);
+
+                    switch (dig) {
+                        case 1:
+                            type = "micro";
+                            break;
+                        case 2:
+                            type = "medium";
+                            break;
+                        case 3:
+                            type = "large";
+                            break;
+                        default:
+                            type = null;
+                            break;
+                    }
+                    try {
+                        if(type == null) msg.setMessage("Invalid Option");
+                        else {
+                            cloud.makeBid(user.getUsername(),type,value);
+                            msg.setMessage("Bid Placed");
+                        }
                     } catch (Exception e) {
                         msg.setMessage(e.getMessage());
                     }
