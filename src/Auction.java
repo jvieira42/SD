@@ -3,34 +3,47 @@
  */
 public class Auction{
 
-    private Slot slot;
+
+
     private String type;
+    private boolean state;
     private double initialPrice;
     private double maxPrice;
     private String maxUser;
 
-    public Auction () {
-        this.slot = null;
-        this.type = null;
-        this.initialPrice = 0.0;
-        this.maxPrice = 0.0;
+    public Auction (String type) {
+        this.type = type;
+        this.state = false;
+        switch (this.getType()) {
+            case "micro":
+                this.initialPrice = 0.01;
+                break;
+            case "medium":
+                this.initialPrice = 0.5;
+                break;
+            case "large":
+                this.initialPrice = 1.0;
+                break;
+        }
+        this.maxPrice = this.initialPrice;
         this.maxUser = null;
     }
 
-    public Auction (Slot slot, String type, double initialPrice, double maxPrice, String maxUser) {
-        this.slot = slot;
-        this.type = type;
-        this.initialPrice = initialPrice;
-        this.maxPrice = maxPrice;
-        this.maxUser = maxUser;
-    }
-
-    public Slot getSlot() {
-        return slot;
-    }
-
-    public void setSlot(Slot slot) {
-        this.slot = slot;
+    public void restartSlot(){
+        this.setState(false);
+        switch (this.getType()) {
+            case "micro":
+                this.setInitialPrice(0.01);
+                break;
+            case "medium":
+                this.setInitialPrice(0.5);
+                break;
+            case "large":
+                this.setInitialPrice(1.0);
+                break;
+        }
+        this.setMaxPrice(this.getInitialPrice());
+        this.maxUser = null ;
     }
 
     public String getType() {
@@ -39,6 +52,14 @@ public class Auction{
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public boolean getState() {
+        return state;
+    }
+
+    public void setState(boolean state) {
+        this.state = state;
     }
 
     public double getInitialPrice() {

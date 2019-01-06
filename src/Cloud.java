@@ -26,6 +26,9 @@ public class Cloud {
         this.slotsAvailable = new HashMap<>();
         this.slotsOccupied = new HashMap<>();
         this.auctions = new HashMap<>();
+        this.auctions.put("micro",new Auction("micro"));
+        this.auctions.put("medium",new Auction("medium"));
+        this.auctions.put("large",new Auction("large"));
         this.messages = new HashMap<>();
         this.usersLock = new ReentrantLock();
         this.slotsAvLock = new ReentrantLock();
@@ -110,7 +113,7 @@ public class Cloud {
         this.usersLock.lock();
         String list="";
         try {
-            for(String s : this.users.get(user.getUsername()).getUserSlots().keySet())
+            for(String s : this.users.get(user.getUsername()).getUserSlots())
                 list += s +" ";
             if (list.equals("")) throw new Exception("There are no reserved slots");
         } finally {
@@ -133,169 +136,176 @@ public class Cloud {
         String id = "";
         Slot res;
         this.slotsAvLock.lock();
-        if(existSlot(type)){
-            for(Slot s : slotsAvailable.values()) {
-                if (s.getType().equals(type)) {
-                    res=s;
-                    slotsAvailable.remove(res.getSlotId());
-                    this.slotsAvLock.unlock();
-
-                    id = res.getSlotId();
-                    res.startTime();
-                    this.usersLock.lock();
-                    this.users.get(user.getUsername()).setSlot(s);
-                    this.usersLock.unlock();
-                    this.slotsOcLock.lock();
-                    slotsOccupied.put(res.getSlotId(),res);
-                    this.slotsOcLock.unlock();
-                    break;
+        this.usersLock.lock();
+        this.slotsOcLock.lock();
+        try{
+            if(existSlot(type)){
+                for(Slot s : slotsAvailable.values()) {
+                    if (s.getType().equals(type)) {
+                        res=s;
+                        slotsAvailable.remove(res.getSlotId());
+                        id = res.getSlotId();
+                        res.startTime();
+                        this.users.get(user.getUsername()).setSlot(id);
+                        slotsOccupied.put(id,res);
+                        break;
+                    }
                 }
-            }
 
+            }
+            else{
+                throw new Exception("Slot type not available");
+            }
+        }finally {
+            this.usersLock.unlock();
+            this.slotsAvLock.unlock();
+            this.slotsOcLock.unlock();
         }
-        else throw new Exception("Slot type not available");
         return id;
     }
+
+
 
     /** Release slot by id
      * @return slot id that was released
      * */
-    public String releaseSlot(User user, String id) throws Exception {
+    public void releaseSlot(User user, String id) throws Exception {
         Slot s;
+        Auction a;
         double slotTime = 0;
-            this.slotsOcLock.lock();
+
+        this.slotsOcLock.lock();
+        this.slotsAvLock.lock();
+        this.usersLock.lock();
+        try {
+
             if (slotsOccupied.containsKey(id)) {
                 s = slotsOccupied.get(id);
-                slotsOccupied.remove(id);
-                this.slotsOcLock.unlock();
                 slotTime = s.getFinalTime()/1000;
-
-                this.usersLock.lock();
                 this.users.get(user.getUsername()).removeSlot(id);
                 this.users.get(user.getUsername()).addDebt( slotTime * s.getPrice());
-                this.usersLock.unlock();
 
-                this.slotsAvLock.lock();
-                slotsAvailable.put(s.getSlotId(),s);
-                this.slotsAvLock.unlock();
-
-                s.resetTime();
+                Slot slot = new Slot(id,s.getType());
+                slotsOccupied.remove(id);
+                slotsAvailable.put(id,slot);
+                //notifyAll();
             }
-
-            else throw new Exception("Slot is not reserved");
-
-        return id;
+            else{
+                throw new Exception("Slot is not reserved");
+            }
+        } finally {
+            this.usersLock.unlock();
+            this.slotsAvLock.unlock();
+            this.slotsOcLock.unlock();
+        }
     }
 
     /** Make a bid on an auction by type
      * @return slot id that was bidded
      * */
-    public String makeBid (String user, String type, double bid) throws Exception {
-        Auction res = null;
-        String id = null;
-        this.auctionsLock.lock();
-        if (existAuction(type)) {
-            for(Auction a : this.auctions.values()) {
-                if (a.getType().equals(type)) {
-                    if (bid>a.getInitialPrice() && bid>a.getMaxPrice()) {
-                        res=a;
-                        a.setMaxPrice(bid);
-                        a.setMaxUser(user);
-                    }
-                    else throw  new Exception("Your bid is too low");
-                }
+    public void makeBid (String user, String type, double bid) throws Exception {
 
+        Auction res = null;
+        this.auctionsLock.lock();
+        this.slotsOcLock.lock();
+        try{
+            if (existAuction(type)){
+                    res = this.auctions.get(type);
+                    if (bid>res.getInitialPrice() && bid>res.getMaxPrice()) {
+                        res.setMaxPrice(bid);
+                        res.setMaxUser(user);
+                    } else{
+                        throw  new Exception("Your bid is too low");
+                    }
+                }
+            else{
+                throw new Exception("No auctions available");
             }
+        }finally {
+            this.auctionsLock.unlock();
+            this.slotsOcLock.unlock();
         }
-        else throw new Exception("No auctions available");
-        this.auctionsLock.unlock();
-        id = res.getSlot().getSlotId();
-        return id;
     }
 
     /** Create an auction
      * @return slot id of the auction
      * */
-    public String manageAuction(String type){
-        Auction auction = null;
-        double initPrice = 0;
-        switch (type) {
-            case "micro":
-                initPrice = 0.01;
-                break;
-            case "medium":
-                initPrice = 0.5;
-                break;
-            case "large":
-                initPrice = 1.0;
-                break;
-        }
-            try{
-                this.auctionsLock.lock();
-                    if (!existAuction(type)){
-                        this.slotsAvLock.lock();
+    public boolean manageAuction(String type){
+        Auction auction;
+        String id = null;
+        boolean created = false;
+
+        this.slotsOcLock.lock();
+        this.auctionsLock.lock();
+        this.slotsAvLock.lock();
+        try{
+                if (!existAuction(type)){
                         for(Slot s : slotsAvailable.values()){
                                 if(s.getType().equals(type)){
+                                    created = true;
+                                    Slot slot = new Slot(s.getSlotId(),s.getType(),s.getPrice());
+                                    id = s.getSlotId();
                                     this.slotsAvailable.remove(s.getSlotId());
-                                    this.slotsAvLock.unlock();
-                                    auction = new Auction();
-                                    auction.setSlot(s);
-                                    auction.setInitialPrice(initPrice);
-                                    auction.setMaxPrice(initPrice);
-                                    auction.setType(type);
-                                    this.auctions.put(s.getSlotId(),auction);
+                                    auction = this.auctions.get(type);
+                                    auction.setState(true);
+                                    slot.setAuction(true);
+                                    this.slotsOccupied.put(id,slot);
                                     break;
                                 }
                         }
-
-
-                    }
-                this.auctionsLock.unlock();
-
-
+                        //if (!created) wait();
+                }
             }catch (Exception e) {
                 e.printStackTrace();
+            }finally {
+                this.slotsOcLock.unlock();
+                this.auctionsLock.unlock();
+                this.slotsAvLock.unlock();
             }
-        if(auction == null) return null;
-        return auction.getSlot().getSlotId();
+        return created;
     }
 
 
     /** End an auction
      *
      * */
-    public void endAuction(String auctionID){
+    public void endAuction(String type){
         Auction auction = null;
         Slot slot = null;
         User user = null;
+        this.auctionsLock.lock();
+        this.usersLock.lock();
+        this.slotsAvLock.lock();
+        this.slotsOcLock.lock();
         try{
-            this.auctionsLock.lock();
-            auction = auctions.get(auctionID);
-            auctions.remove(auctionID);
+            if(existAuction(type)){
 
-            if(auction.getMaxUser() != null){
-                slot = auction.getSlot();
-                slot.startTime();
-                slot.setPrice(auction.getMaxPrice());
-                this.slotsOcLock.lock();
-                slotsOccupied.put(slot.getSlotId(),slot);
-                this.slotsOcLock.unlock();
+                auction = auctions.get(type);
 
-                this.usersLock.lock();
-                user = this.users.get(auction.getMaxUser());
-                user.setSlot(slot);
-                this.usersLock.unlock();
-            }else{
-                //If there are no bids
-                this.slotsAvLock.lock();
-                this.slotsAvailable.put(auction.getSlot().getSlotId(),auction.getSlot());
-                this.slotsAvLock.unlock();
+                slot = this.slotsOccupied.get(getAuction(type));
+                slot.setAuction(false);
+
+                if(auction.getMaxUser() != null){
+                    slot.setFromAuction(true);
+                    slot.startTime();
+                    slot.setPrice(auction.getMaxPrice());
+                    user = this.users.get(auction.getMaxUser());
+                    user.setSlot(slot.getSlotId());
+                }else{
+                    String id = slot.getSlotId();
+                    this.slotsOccupied.remove(id);
+                    this.slotsAvailable.put(id,new Slot(id,type));
+                }
+                auction.restartSlot();
             }
 
         }catch (Exception e ) {
             e.printStackTrace();
         }finally {
             this.auctionsLock.unlock();
+            this.usersLock.unlock();
+            this.slotsAvLock.unlock();
+            this.slotsOcLock.unlock();
         }
     }
 
@@ -303,8 +313,8 @@ public class Cloud {
      * @return boolean
      * */
     public boolean existAuction(String type){
-        for(Auction a : this.auctions.values()){
-            if(a.getType().equals(type)){
+        for(Slot s : this.slotsOccupied.values()){
+            if(s.getType().equals(type) && s.isAuction()){
                 return true;
             }
         }
@@ -321,6 +331,15 @@ public class Cloud {
             }
         }
         return false;
+    }
+
+    public String getAuction(String type){
+        for(Slot s : this.slotsOccupied.values()){
+            if (s.getType().equals(type) && s.isAuction()){
+                return s.getSlotId();
+            }
+        }
+        return null;
     }
 }
 

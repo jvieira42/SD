@@ -1,25 +1,25 @@
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class User {
 
     private String username;
     private String password;
     private double debt;
-    private Map<String,Slot> slotsReserved;
+    private List<String> slotsReserved;
 
     public User() {
         this.username = null;
         this.password = null;
         this.debt = 0.0;
-        this.slotsReserved = new HashMap<>();
+        this.slotsReserved = new ArrayList<>();
     }
 
     public User(String username, String password) {
         this.username = username;
         this.password = password;
         this.debt = 0.0;
-        this.slotsReserved = new HashMap<>();
+        this.slotsReserved = new ArrayList<>();
     }
 
     //Getters
@@ -35,13 +35,13 @@ public class User {
         return this.debt;
     }
 
-    public Map<String,Slot> getUserSlots() {
+    public List<String> getUserSlots() {
         return this.slotsReserved;
     }
 
     //Setters
-    public void setSlot (Slot s) {
-        slotsReserved.put(s.getSlotId(),s);
+    public void setSlot (String s) {
+        slotsReserved.add(s);
     }
 
     public void setUsername (String username) { this.username = username; }

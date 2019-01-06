@@ -1,7 +1,10 @@
+import java.util.concurrent.locks.ReentrantLock;
+
 public class AuctionHouse extends Thread {
 
     private Cloud cloud;
     private String type;
+    private ReentrantLock lock;
 
     public AuctionHouse(Cloud cloud, String type) {
         this.cloud = cloud;
@@ -10,13 +13,14 @@ public class AuctionHouse extends Thread {
 
     @Override
     public void run() {
-        String auctionId;
+        boolean active;
         while(true){
-
             try {
-                auctionId = cloud.manageAuction(type);
-                sleep(3000);
-                cloud.endAuction(auctionId);
+                   active = cloud.manageAuction(type);
+                    if(active) {
+                        sleep(30000);
+                        cloud.endAuction(type);
+                    }
             } catch (Exception e) {
                 e.printStackTrace();
             }

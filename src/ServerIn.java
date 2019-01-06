@@ -86,7 +86,6 @@ public class ServerIn extends Thread {
                             type = null;
                             break;
                     }
-
                     try {
                         if(type == null) msg.setMessage("Invalid Option");
                         else {

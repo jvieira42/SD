@@ -23,9 +23,8 @@ public class Server {
         AuctionHouse large = new AuctionHouse(cloud,"large");
 
 
-
         //Povoamento das slots, 10 por cada tipo (micro,med,large)
-        for (int i=0; i<10;i++){
+        for (int i=0; i<5;i++){
             Slot sMicro = new Slot("s"+i+".micro","micro",0.5);
             Slot sMed = new Slot("s"+i+".medium","medium",1.0);
             Slot sLarge = new Slot("s"+i+".large","large",1.5);
